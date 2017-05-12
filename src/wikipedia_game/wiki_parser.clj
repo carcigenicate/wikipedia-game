@@ -83,6 +83,34 @@
                (conj visited next-page-name?)
                acc')))))
 
+(defn link-jump-with
+  "Jumps from the seed link to the first link in its main body.
+  Maintains an accumulator that's defined by (f previous-acc current-page-name next-page-name).
+  Loops while the current iteration is less than max-jumps, no loops have been detected, and the next page is found.
+  :bad-page will be the placeholder name for a page that can't be found."
+  [seed-term max-jumps init-acc f]
+  (let [seed-name (linkify-text seed-term)]
+    (loop [i 0
+           current-page-name seed-name
+           visited #{seed-name}
+           acc init-acc]
+
+      (let [current-page-link (construct-page-link current-page-name)
+            next-page-name? (try-get-next-page-name current-page-name)
+            next-page-name (if next-page-name? next-page-name? :bad-page)
+            acc' (f acc current-page-name next-page-name)]
+
+        (if (or (> i max-jumps) (visited next-page-name) (not next-page-name?))
+          acc'
+
+          (recur (inc i)
+                 next-page-name
+                 (conj visited next-page-name)
+                 acc'))))))
+
+(defn map-first-links [seed-term max-jumps]
+  (link-jump-with seed-term max-jumps {} assoc))
+
 (def test-page
   (delay
     (parse-page (simple-construct-page-link "Soft Drink"))))
