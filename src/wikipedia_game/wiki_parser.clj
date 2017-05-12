@@ -96,7 +96,7 @@
            acc init-acc]
 
       (let [current-page-link (construct-page-link current-page-name)
-            next-page-name? (try-get-next-page-name current-page-name)
+            next-page-name? (try-get-next-page-name current-page-link)
             next-page-name (if next-page-name? next-page-name? :bad-page)
             acc' (f acc current-page-name next-page-name)]
 
@@ -108,8 +108,14 @@
                  (conj visited next-page-name)
                  acc'))))))
 
-(defn map-first-links [seed-term max-jumps]
+(defn map-next-links [seed-term max-jumps]
   (link-jump-with seed-term max-jumps {} assoc))
+
+(defn map-many-next-links [seed-terms max-jumps]
+  (reduce (fn [acc term]
+            (link-jump-with term max-jumps acc assoc))
+          {}
+          seed-terms))
 
 (def test-page
   (delay
